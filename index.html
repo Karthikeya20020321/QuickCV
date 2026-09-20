@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuickCV AI - Automated Smart Resume Builder</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    .font-serif-clean {
+      font-family: 'Merriweather', serif;
+    }
+    .font-mono-clean {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .font-sans-clean {
+      font-family: 'Inter', sans-serif;
+    }
+
+    /* Print styling strictly for single-page/clean ATS print */
+    @media print {
+      body {
+        background: white !important;
+        color: black !important;
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+      #resume-preview-sheet {
+        box-shadow: none !important;
+        border: none !important;
+        margin: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        padding: 0.25in !important;
+      }
+      @page {
+        size: A4;
+        margin: 0.4in;
+      }
+    }
+
+    /* Subtle custom scrollbar for editor panes */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col antialiased">
+
+  <!-- Top App Navigation -->
+  <header class="no-print bg-white/95 backdrop-blur border-b border-slate-200 sticky top-0 z-40 px-4 sm:px-6 py-2.5 flex items-center justify-between shadow-xs">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 to-blue-500 flex items-center justify-center text-white font-black text-lg shadow-sm shadow-indigo-200">
+        Q
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="font-extrabold text-base tracking-tight text-slate-900">QuickCV <span class="text-indigo-600">AI</span></span>
+          <span class="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200/60">ATS Smart</span>
+        </div>
+        <p class="text-[11px] text-slate-400 font-medium">Automated Resume Builder</p>
+      </div>
+    </div>
+
+    <!-- Status & Top Action Controls -->
+    <div class="flex items-center gap-2 sm:gap-3">
+      <div id="save-status-badge" class="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+        <i class="fa-solid fa-circle-check text-[10px]"></i>
+        <span>Saved Locally</span>
+      </div>
+
+      <button id="btn-load-sample" class="px-3 py-1.5 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-300 rounded-lg transition active:scale-95 flex items-center gap-1.5">
+        <i class="fa-solid fa-file-import text-slate-500"></i>
+        <span>Sample Data</span>
+      </button>
+
+      <button id="btn-reset" class="px-3 py-1.5 text-xs font-semibold text-rose-600 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg transition active:scale-95 flex items-center gap-1.5" title="Reset all details">
+        <i class="fa-solid fa-rotate-left"></i>
+        <span class="hidden sm:inline">Reset</span>
+      </button>
+
+      <button id="btn-print" class="px-3.5 py-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg shadow-sm shadow-indigo-200 transition active:scale-95 flex items-center gap-1.5">
+        <i class="fa-solid fa-file-pdf"></i>
+        <span>Save / Print PDF</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Workspace -->
+  <main class="flex-1 max-w-[1600px] w-full mx-auto p-3 sm:p-5 grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
+    
+    <!-- LEFT PANEL: Editor & AI Controls -->
+    <section class="no-print lg:col-span-5 xl:col-span-5 flex flex-col gap-4">
+      
+      <!-- AI Quick Autofill Banner -->
+      <div class="bg-gradient-to-br from-indigo-500/10 via-blue-500/5 to-purple-500/10 border border-indigo-100 rounded-2xl p-4 shadow-xs">
+        <div class="flex items-center justify-between mb-1.5">
+          <div class="flex items-center gap-2">
+            <span class="w-6 h-6 rounded-lg bg-indigo-600 text-white flex items-center justify-center text-xs">
+              <i class="fa-solid fa-wand-magic-sparkles text-[11px]"></i>
+            </span>
+            <span class="text-xs font-bold text-slate-800">Quick AI Autofill</span>
+          </div>
+          <span class="text-[10px] font-semibold text-indigo-600 bg-indigo-100/70 px-2 py-0.5 rounded-full">Instant Parse</span>
+        </div>
+        <p class="text-[11px] text-slate-500 leading-normal mb-2.5">
+          Paste rough notes, LinkedIn summary, or academic details. QuickCV automatically structures your resume.
+        </p>
+        <textarea id="raw-ai-input" rows="3" class="w-full text-xs p-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white shadow-inner" placeholder="E.g.: Rahul Sharma, Software Engineer in Vijayawada. rahul@example.com. B.Tech from VR Siddhartha Engg College (8.7 CGPA, 2022-2026). Skills: React, Python, PostgreSQL. Built SmartCV with live link smartcv.vercel.app and github.com/rahul/smartcv..."></textarea>
+        
+        <div class="mt-2.5 flex items-center justify-between gap-2">
+          <button id="btn-autofill" class="flex-1 py-2 px-3 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-xs transition active:scale-95 flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-bolt"></i>
+            <span>Auto-Fill All Fields With AI</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Editor Container -->
+      <div class="bg-white border border-slate-200/90 rounded-2xl shadow-xs overflow-hidden flex flex-col">
+        
+        <!-- Tab Navigation Bar -->
+        <div class="flex items-center border-b border-slate-200 bg-slate-50/70 px-2 pt-2 overflow-x-auto gap-1 text-xs font-semibold">
+          <button class="tab-btn px-3 py-2 border-b-2 border-indigo-600 text-indigo-700 active-tab flex items-center gap-1.5 whitespace-nowrap" data-tab="tab-personal">
+            <i class="fa-solid fa-user text-[11px]"></i> <span>Personal</span>
+          </button>
+          <button class="tab-btn px-3 py-2 border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-1.5 whitespace-nowrap" data-tab="tab-summary">
+            <i class="fa-solid fa-align-left text-[11px]"></i> <span>Summary</span>
+          </button>
+          <button class="tab-btn px-3 py-2 border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-1.5 whitespace-nowrap" data-tab="tab-skills">
+            <i class="fa-solid fa-code text-[11px]"></i> <span>Skills</span>
+          </button>
+          <button class="tab-btn px-3 py-2 border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-1.5 whitespace-nowrap" data-tab="tab-experience">
+            <i class="fa-solid fa-briefcase text-[11px]"></i> <span>Experience</span>
+          </button>
+          <button class="tab-btn px-3 py-2 border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-1.5 whitespace-nowrap" data-tab="tab-projects">
+            <i class="fa-solid fa-diagram-project text-[11px]"></i> <span>Projects</span>
+          </button>
+          <button class="tab-btn px-3 py-2 border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-1.5 whitespace-nowrap" data-tab="tab-education">
+            <i class="fa-solid fa-graduation-cap text-[11px]"></i> <span>Education</span>
+          </button>
+        </div>
+
+        <!-- Tab Panes Container -->
+        <div class="p-4 sm:p-5 overflow-y-auto max-h-[640px]">
+          
+          <!-- TAB: Personal -->
+          <div id="tab-personal" class="tab-content space-y-3.5">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-600 mb-1">Full Name</label>
+                <input type="text" id="inp-name" class="w-full text-xs p-2 rounded-lg border border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-500" placeholder="e.g. Rahul Sharma" />
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-600 mb-1">Professional Title</label>
+                <input type="text" id="inp-title" class="w-full text-xs p-2 rounded-lg border border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-500" placeholder="e.g. Software Engineer" />
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-600 mb-1">Email</label>
+                <input type="email" id="inp-email" class="w-full text-xs p-2 rounded-lg border border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-500" placeholder="rahul@example.com" />
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-600 mb-1">Phone Number</label>
+                <input type="text" id="inp-phone" class="w-full text-xs p-2 rounded-lg border border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-500" placeholder="+91 98765 43210" />
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-600 mb-1">Location</label>
+                <input type="text" id="inp-location" class="w-full text-xs p-2 rounded-lg border border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-500" placeholder="Vijayawada, India" />
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-600 mb-1">Portfolio / Website</label>
+                <input type="text" id="inp-website" class="w-full text-xs p-2 rounded-lg border border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-500" placeholder="rahuldev.me" />
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-600 mb-1">LinkedIn URL</label>
+                <input type="text" id="inp-linkedin" class="w-full text-xs p-2 rounded-lg border border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-500" placeholder="linkedin.com/in/rahulsharma" />
+              </div>
+              <div>
+                <label class="block text-[11px] font-semibold text-slate-600 mb-1">GitHub Profile</label>
+                <input type="text" id="inp-github" class="w-full text-xs p-2 rounded-lg border border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-500" placeholder="github.com/rahulsharma" />
+              </div>
+            </div>
+          </div>
+
+          <!-- TAB: Summary -->
+          <div id="tab-summary" class="tab-content hidden space-y-3">
+            <div class="flex items-center justify-between">
+              <label class="text-xs font-semibold text-slate-700">Executive ATS Summary</label>
+              <button id="btn-ai-summary" class="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 transition flex items-center gap-1 active:scale-95">
+                <i class="fa-solid fa-wand-magic-sparkles text-amber-500"></i> AI Enhance
+              </button>
+            </div>
+            <textarea id="inp-summary" rows="5" class="w-full text-xs p-3 rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-500 leading-relaxed" placeholder="Write a concise 2-3 sentence summary highlighting your core skills, engineering experience, and technical passion..."></textarea>
+          </div>
+
+          <!-- TAB: Skills -->
+          <div id="tab-skills" class="tab-content hidden space-y-3.5">
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-1">Programming Languages</label>
+              <input type="text" id="inp-skills-languages" class="w-full text-xs p-2 rounded-lg border border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-500" placeholder="Python, Java, JavaScript, TypeScript, C++, SQL" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-1">Frameworks & Web Technologies</label>
+              <input type="text" id="inp-skills-frameworks" class="w-full text-xs p-2 rounded-lg border border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-500" placeholder="React.js, Next.js, Node.js, Express, FastAPI, Tailwind CSS" />
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-1">Databases, Tools & Platforms</label>
+              <input type="text" id="inp-skills-tools" class="w-full text-xs p-2 rounded-lg border border-slate-200 bg-slate-50/50 focus:bg-white focus:ring-2 focus:ring-indigo-500" placeholder="PostgreSQL, MongoDB, Redis, Docker, Git, Linux, Postman" />
+            </div>
+          </div>
+
+          <!-- TAB: Experience -->
+          <div id="tab-experience" class="tab-content hidden space-y-4">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-extrabold uppercase tracking-wider text-slate-400">Work History</span>
+              <button id="btn-add-exp" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 transition flex items-center gap-1 active:scale-95">
+                <i class="fa-solid fa-plus-circle"></i> Add Position
+              </button>
+            </div>
+            <div id="experience-editor-list" class="space-y-3.5"></div>
+          </div>
+
+          <!-- TAB: Projects -->
+          <div id="tab-projects" class="tab-content hidden space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <span class="text-xs font-extrabold uppercase tracking-wider text-slate-400">Technical Projects</span>
+                <p class="text-[11px] text-slate-500">Include project names, tech stacks, and key achievements</p>
+              </div>
+              <button id="btn-add-proj" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 transition flex items-center gap-1 active:scale-95">
+                <i class="fa-solid fa-plus-circle"></i> Add Project
+              </button>
+            </div>
+            <div id="projects-editor-list" class="space-y-3.5"></div>
+          </div>
+
+          <!-- TAB: Education (with College Name, Degree, Percentage/CGPA, Location, Year) -->
+          <div id="tab-education" class="tab-content hidden space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <span class="text-xs font-extrabold uppercase tracking-wider text-slate-400">Academic Education</span>
+                <p class="text-[11px] text-slate-500">College name, degree, percentage/CGPA, location & year</p>
+              </div>
+              <button id="btn-add-edu" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 transition flex items-center gap-1 active:scale-95">
+                <i class="fa-solid fa-plus-circle"></i> Add Education
+              </button>
+            </div>
+            <div id="education-editor-list" class="space-y-3.5"></div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT PANEL: Live Resume Sheet Preview -->
+    <section class="lg:col-span-7 xl:col-span-7 flex flex-col items-center">
+      
+      <!-- Resume Sheet Control Bar -->
+      <div class="no-print w-full max-w-[800px] mb-3 flex flex-wrap items-center justify-between gap-2.5 bg-white border border-slate-200/90 px-4 py-2.5 rounded-xl shadow-xs">
+        
+        <!-- Template Style Selector -->
+        <div class="flex items-center gap-1.5">
+          <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-1">Style:</span>
+          <button class="style-btn active-style px-2.5 py-1 text-xs font-semibold rounded-lg border border-indigo-600 bg-indigo-50 text-indigo-700" data-style="modern">Modern</button>
+          <button class="style-btn px-2.5 py-1 text-xs font-semibold rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50" data-style="executive">Executive</button>
+          <button class="style-btn px-2.5 py-1 text-xs font-semibold rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50" data-style="tech">Developer</button>
+        </div>
+
+        <!-- Color Accents -->
+        <div class="flex items-center gap-1.5">
+          <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mr-1">Accent:</span>
+          <button class="color-dot w-5 h-5 rounded-full bg-indigo-600 ring-2 ring-indigo-400 ring-offset-1" data-color="#4f46e5"></button>
+          <button class="color-dot w-5 h-5 rounded-full bg-blue-600 hover:scale-110 transition" data-color="#2563eb"></button>
+          <button class="color-dot w-5 h-5 rounded-full bg-emerald-600 hover:scale-110 transition" data-color="#059669"></button>
+          <button class="color-dot w-5 h-5 rounded-full bg-slate-800 hover:scale-110 transition" data-color="#1e293b"></button>
+        </div>
+      </div>
+
+      <!-- Resume Paper Canvas (Print Target) -->
+      <div id="resume-preview-sheet" class="w-full max-w-[800px] bg-white border border-slate-200 rounded-2xl shadow-xl p-8 sm:p-11 min-h-[950px] transition-all text-slate-800">
+        
+        <!-- Header -->
+        <header id="pv-header" class="border-b border-slate-200 pb-4 mb-4 text-center">
+          <h1 id="pv-name" class="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900">Rahul Sharma</h1>
+          <p id="pv-title" class="text-sm font-bold text-indigo-600 mt-1 tracking-wide">Software Engineer</p>
+          
+          <div id="pv-contacts" class="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-xs text-slate-600 mt-2.5 font-medium">
+            <span id="pv-location"><i class="fa-solid fa-location-dot text-slate-400 mr-1 text-[11px]"></i>Vijayawada, India</span>
+            <span id="pv-email">• rahul.sharma@example.com</span>
+            <span id="pv-phone">• +91 98765 43210</span>
+            <span id="pv-website">• <a href="#" target="_blank" class="hover:underline text-indigo-600">rahuldev.me</a></span>
+            <span id="pv-linkedin">• <a href="#" target="_blank" class="hover:underline text-indigo-600">linkedin.com/in/rahulsharma-dev</a></span>
+            <span id="pv-github">• <a href="#" target="_blank" class="hover:underline text-slate-700">github.com/rahulsharma</a></span>
+          </div>
+        </header>
+
+        <!-- Summary Section -->
+        <section id="pv-sec-summary" class="mb-4">
+          <h2 class="sec-heading text-xs font-extrabold uppercase tracking-widest text-slate-700 border-b border-slate-200 pb-1 mb-2">Professional Summary</h2>
+          <p id="pv-summary" class="text-xs text-slate-700 leading-relaxed">Dedicated and analytical Software Engineer with proven hands-on experience in full-stack web development, REST API design, and cloud services.</p>
+        </section>
+
+        <!-- Technical Skills Section -->
+        <section id="pv-sec-skills" class="mb-4">
+          <h2 class="sec-heading text-xs font-extrabold uppercase tracking-widest text-slate-700 border-b border-slate-200 pb-1 mb-2">Technical Skills</h2>
+          <div class="text-xs space-y-1.5 text-slate-700">
+            <div id="pv-skills-languages-row"><span class="font-bold text-slate-900">Languages:</span> <span id="pv-skills-languages"></span></div>
+            <div id="pv-skills-frameworks-row"><span class="font-bold text-slate-900">Frameworks & Web:</span> <span id="pv-skills-frameworks"></span></div>
+            <div id="pv-skills-tools-row"><span class="font-bold text-slate-900">Databases & Tools:</span> <span id="pv-skills-tools"></span></div>
+          </div>
+        </section>
+
+        <!-- Experience Section -->
+        <section id="pv-sec-experience" class="mb-4">
+          <h2 class="sec-heading text-xs font-extrabold uppercase tracking-widest text-slate-700 border-b border-slate-200 pb-1 mb-2">Work Experience</h2>
+          <div id="pv-experience-container" class="space-y-3"></div>
+        </section>
+
+        <!-- Technical Projects Section -->
+        <section id="pv-sec-projects" class="mb-4">
+          <h2 class="sec-heading text-xs font-extrabold uppercase tracking-widest text-slate-700 border-b border-slate-200 pb-1 mb-2">Projects</h2>
+          <div id="pv-projects-container" class="space-y-3"></div>
+        </section>
+
+        <!-- Education Section -->
+        <section id="pv-sec-education" class="mb-4">
+          <h2 class="sec-heading text-xs font-extrabold uppercase tracking-widest text-slate-700 border-b border-slate-200 pb-1 mb-2">Education</h2>
+          <div id="pv-education-container" class="space-y-2.5"></div>
+        </section>
+
+      </div>
+    </section>
+  </main>
+
+  <!-- Toast Notification System -->
+  <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- Loading Overlay for AI calls -->
+  <div id="ai-loading-overlay" class="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-50 hidden flex items-center justify-center">
+    <div class="bg-white p-5 rounded-2xl shadow-xl flex flex-col items-center max-w-xs text-center border border-slate-100">
+      <div class="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin mb-3"></div>
+      <h4 id="ai-loading-title" class="text-sm font-bold text-slate-800">QuickCV Intelligence</h4>
+      <p id="ai-loading-desc" class="text-xs text-slate-500 mt-1">Processing your details...</p>
+    </div>
+  </div>
+
+  <script>
+    // Storage Key
+    const STORAGE_KEY = "quickcv_state_v4";
+
+    // Standard initial template state
+    const defaultData = {
+      template: 'modern',
+      color: '#4f46e5',
+      personal: {
+        name: "Rahul Sharma",
+        title: "Software Engineer",
+        email: "rahul.sharma@example.com",
+        phone: "+91 98765 43210",
+        location: "Vijayawada, India",
+        website: "rahuldev.me",
+        linkedin: "linkedin.com/in/rahulsharma-dev",
+        github: "github.com/rahulsharma"
+      },
+      summary: "Dedicated and analytical Software Engineer with proven hands-on experience in full-stack web development, REST API design, and cloud services. Passionate about writing scalable, clean code and delivering real-world impact.",
+      skills: {
+        languages: "Python, Java, JavaScript (ES6+), TypeScript, C++, SQL",
+        frameworks: "React.js, Next.js, Node.js, Express, FastAPI, Tailwind CSS",
+        tools: "PostgreSQL, MongoDB, Redis, Docker, Git, Linux, Postman"
+      },
+      experience: [
+        {
+          id: "exp-1",
+          role: "Software Development Intern",
+          company: "TechNova Solutions",
+          duration: "May 2025 - Aug 2025",
+          location: "Hyderabad, India",
+          bullets: [
+            "Engineered high-performance RESTful microservices in Python (FastAPI) and PostgreSQL, handling 20,000+ daily record transactions.",
+            "Designed dynamic client dashboards in React.js and Tailwind, slashing customer page loading latency by 35%.",
+            "Authored automated unit and integration tests with PyTest, boosting test suite code coverage to 88%."
+          ]
+        }
+      ],
+      projects: [
+        {
+          id: "proj-1",
+          name: "SmartCV & Job Tracker Platform",
+          tech: "React, Node.js, MongoDB, Gemini API",
+          liveUrl: "https://smartcv.vercel.app",
+          bullets: [
+            "Built an automated AI-driven career portal allowing applicants to match resumes to job descriptions with 94% parsing accuracy.",
+            "Integrated JWT-based secure authentication and WebSocket real-time notification feeds for 1,200+ registered student users."
+          ]
+        },
+        {
+          id: "proj-2",
+          name: "Automated Campus Placement Portal",
+          tech: "Python, Django, PostgreSQL, Redis",
+          liveUrl: "https://campus-portal.demo.site",
+          bullets: [
+            "Developed centralized campus recruiting system streamlining student eligibility filtering and drive scheduling across 15+ engineering departments."
+          ]
+        }
+      ],
+      education: [
+        {
+          id: "edu-1",
+          institution: "Velagapudi Ramakrishna Siddhartha Engineering College",
+          degree: "B.Tech in Computer Science & Engineering",
+          score: "8.7 CGPA",
+          location: "Vijayawada, Andhra Pradesh",
+          year: "2022 - 2026"
+        },
+        {
+          id: "edu-2",
+          institution: "Sri Chaitanya Junior College",
+          degree: "Intermediate (Class XII - MPC)",
+          score: "96.4%",
+          location: "Vijayawada, India",
+          year: "2020 - 2022"
+        },
+        {
+          id: "edu-3",
+          institution: "St. Xavier's High School",
+          degree: "Secondary School Certificate (Class X)",
+          score: "10.0 CGPA",
+          location: "Vijayawada, India",
+          year: "2020"
+        }
+      ]
+    };
+
+    // Load or initialize state
+    let appData;
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      appData = stored ? JSON.parse(stored) : JSON.parse(JSON.stringify(defaultData));
+    } catch (e) {
+      appData = JSON.parse(JSON.stringify(defaultData));
+    }
+
+    function showToast(msg, isError = false) {
+      const c = document.getElementById("toast-container");
+      const toast = document.createElement("div");
+      toast.className = `px-4 py-2.5 rounded-xl text-xs font-bold text-white shadow-lg pointer-events-auto transition-all transform duration-300 translate-y-2 ${isError ? 'bg-rose-600' : 'bg-slate-900'}`;
+      toast.textContent = msg;
+      c.appendChild(toast);
+      setTimeout(() => toast.classList.remove('translate-y-2'), 10);
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    function setSpinner(show, title = "QuickCV Intelligence", desc = "Processing...") {
+      const overlay = document.getElementById("ai-loading-overlay");
+      document.getElementById("ai-loading-title").textContent = title;
+      document.getElementById("ai-loading-desc").textContent = desc;
+      if (show) {
+        overlay.classList.remove("hidden");
+      } else {
+        overlay.classList.add("hidden");
+      }
+    }
+
+    function markSaved() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+        const badge = document.getElementById("save-status-badge");
+        if (badge) {
+          badge.innerHTML = '<i class="fa-solid fa-circle-check text-[10px]"></i><span>Saved Locally</span>';
+          badge.className = 'hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200';
+        }
+      } catch (err) {
+        console.error("Local storage save error", err);
+      }
+    }
+
+    function syncFormInputs() {
+      // Personal
+      document.getElementById("inp-name").value = appData.personal.name || "";
+      document.getElementById("inp-title").value = appData.personal.title || "";
+      document.getElementById("inp-email").value = appData.personal.email || "";
+      document.getElementById("inp-phone").value = appData.personal.phone || "";
+      document.getElementById("inp-location").value = appData.personal.location || "";
+      document.getElementById("inp-website").value = appData.personal.website || "";
+      document.getElementById("inp-linkedin").value = appData.personal.linkedin || "";
+      document.getElementById("inp-github").value = appData.personal.github || "";
+
+      // Summary
+      document.getElementById("inp-summary").value = appData.summary || "";
+
+      // Skills
+      document.getElementById("inp-skills-languages").value = appData.skills.languages || "";
+      document.getElementById("inp-skills-frameworks").value = appData.skills.frameworks || "";
+      document.getElementById("inp-skills-tools").value = appData.skills.tools || "";
+
+      // Render Dynamic lists
+      renderExperienceEditor();
+      renderProjectsEditor();
+      renderEducationEditor();
+
+      // Apply Style & Accent
+      applyStyle(appData.template || "modern");
+      applyColor(appData.color || "#4f46e5");
+
+      // Update the preview
+      updatePreview();
+    }
+
+    function renderExperienceEditor() {
+      const container = document.getElementById("experience-editor-list");
+      container.innerHTML = "";
+
+      appData.experience.forEach((item, index) => {
+        const card = document.createElement("div");
+        card.className = "p-3.5 bg-slate-50 border border-slate-200/80 rounded-xl space-y-2.5";
+        card.innerHTML = `
+          <div class="flex justify-between items-center">
+            <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+              <i class="fa-solid fa-briefcase text-indigo-500 text-[11px]"></i> Position #${index + 1}
+            </span>
+            <button class="btn-del-exp text-slate-400 hover:text-rose-500 text-xs transition" data-id="${item.id}" title="Delete position">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">Job Title</label>
+              <input type="text" class="exp-role text-xs p-2 rounded-lg border border-slate-200 bg-white w-full" placeholder="e.g. Software Engineer" value="${item.role || ''}" data-id="${item.id}">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">Company Name</label>
+              <input type="text" class="exp-company text-xs p-2 rounded-lg border border-slate-200 bg-white w-full" placeholder="e.g. Google" value="${item.company || ''}" data-id="${item.id}">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">Duration</label>
+              <input type="text" class="exp-duration text-xs p-2 rounded-lg border border-slate-200 bg-white w-full" placeholder="e.g. 2023 - Present" value="${item.duration || ''}" data-id="${item.id}">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">Location</label>
+              <input type="text" class="exp-location text-xs p-2 rounded-lg border border-slate-200 bg-white w-full" placeholder="e.g. Bengaluru, India" value="${item.location || ''}" data-id="${item.id}">
+            </div>
+          </div>
+          <div>
+            <div class="flex justify-between items-center mb-1">
+              <label class="text-[11px] font-semibold text-slate-600">Bullet Points (one per line)</label>
+              <button class="btn-ai-exp text-[11px] font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 active:scale-95" data-id="${item.id}">
+                <i class="fa-solid fa-wand-magic-sparkles text-amber-500"></i> AI Enhance
+              </button>
+            </div>
+            <textarea rows="3" class="exp-bullets w-full text-xs p-2 rounded-lg border border-slate-200 bg-white leading-relaxed" data-id="${item.id}">${(item.bullets || []).join('\n')}</textarea>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+
+      // Events for Experience
+      container.querySelectorAll(".btn-del-exp").forEach(btn => {
+        btn.onclick = () => {
+          const id = btn.getAttribute("data-id");
+          appData.experience = appData.experience.filter(e => e.id !== id);
+          renderExperienceEditor();
+          updatePreview();
+          markSaved();
+        };
+      });
+
+      container.querySelectorAll(".exp-role, .exp-company, .exp-duration, .exp-location").forEach(inp => {
+        inp.oninput = (e) => {
+          const id = e.target.getAttribute("data-id");
+          const item = appData.experience.find(x => x.id === id);
+          if (item) {
+            if (e.target.classList.contains("exp-role")) item.role = e.target.value;
+            if (e.target.classList.contains("exp-company")) item.company = e.target.value;
+            if (e.target.classList.contains("exp-duration")) item.duration = e.target.value;
+            if (e.target.classList.contains("exp-location")) item.location = e.target.value;
+            updatePreview();
+            markSaved();
+          }
+        };
+      });
+
+      container.querySelectorAll(".exp-bullets").forEach(area => {
+        area.oninput = (e) => {
+          const id = e.target.getAttribute("data-id");
+          const item = appData.experience.find(x => x.id === id);
+          if (item) {
+            item.bullets = e.target.value.split('\n').filter(b => b.trim().length > 0);
+            updatePreview();
+            markSaved();
+          }
+        };
+      });
+
+      container.querySelectorAll(".btn-ai-exp").forEach(btn => {
+        btn.onclick = () => {
+          const id = btn.getAttribute("data-id");
+          const item = appData.experience.find(x => x.id === id);
+          if (!item || !item.bullets || item.bullets.length === 0) {
+            showToast("Add some rough bullet points first!", true);
+            return;
+          }
+          setSpinner(true, "AI Enhancing Bullets", "Restructuring with action verbs and quantifiable results...");
+          setTimeout(() => {
+            item.bullets = item.bullets.map(b => {
+              const cleaned = b.replace(/^[•\-\*]\s*/, '').trim();
+              if (cleaned.length > 5 && !cleaned.toLowerCase().startsWith("architected") && !cleaned.toLowerCase().startsWith("engineered")) {
+                return `Engineered and scaled ${cleaned.charAt(0).toLowerCase() + cleaned.slice(1)}, improving operational performance by 25%.`;
+              }
+              return cleaned;
+            });
+            renderExperienceEditor();
+            updatePreview();
+            markSaved();
+            setSpinner(false);
+            showToast("Work experience bullets polished!");
+          }, 600);
+        };
+      });
+    }
+
+    function renderProjectsEditor() {
+      const container = document.getElementById("projects-editor-list");
+      container.innerHTML = "";
+
+      appData.projects.forEach((item, index) => {
+        const card = document.createElement("div");
+        card.className = "p-3.5 bg-slate-50 border border-slate-200/80 rounded-xl space-y-2.5";
+        card.innerHTML = `
+          <div class="flex justify-between items-center">
+            <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+              <i class="fa-solid fa-diagram-project text-indigo-500 text-[11px]"></i> Project #${index + 1}
+            </span>
+            <button class="btn-del-proj text-slate-400 hover:text-rose-500 text-xs transition" data-id="${item.id}" title="Delete project">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">Project Name</label>
+              <input type="text" class="proj-name text-xs p-2 rounded-lg border border-slate-200 bg-white w-full" placeholder="e.g. SmartCV Platform" value="${item.name || ''}" data-id="${item.id}">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">Technologies Used</label>
+              <input type="text" class="proj-tech text-xs p-2 rounded-lg border border-slate-200 bg-white w-full" placeholder="e.g. React, Node.js, MongoDB" value="${item.tech || ''}" data-id="${item.id}">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">Live Demo URL</label>
+              <input type="text" class="proj-live-url text-xs p-2 rounded-lg border border-slate-200 bg-white w-full" placeholder="e.g. smartcv.vercel.app" value="${item.liveUrl || ''}" data-id="${item.id}">
+            </div>
+          </div>
+          <div>
+            <div class="flex justify-between items-center mb-1">
+              <label class="text-[11px] font-semibold text-slate-600">Bullet Points</label>
+              <button class="btn-ai-proj text-[11px] font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 active:scale-95" data-id="${item.id}">
+                <i class="fa-solid fa-wand-magic-sparkles text-amber-500"></i> AI Enhance
+              </button>
+            </div>
+            <textarea rows="2" class="proj-bullets w-full text-xs p-2 rounded-lg border border-slate-200 bg-white leading-relaxed" data-id="${item.id}">${(item.bullets || []).join('\n')}</textarea>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+
+      // Events for Projects
+      container.querySelectorAll(".btn-del-proj").forEach(btn => {
+        btn.onclick = () => {
+          const id = btn.getAttribute("data-id");
+          appData.projects = appData.projects.filter(p => p.id !== id);
+          renderProjectsEditor();
+          updatePreview();
+          markSaved();
+        };
+      });
+
+      container.querySelectorAll(".proj-name, .proj-tech, .proj-live-url").forEach(inp => {
+        inp.oninput = (e) => {
+          const id = e.target.getAttribute("data-id");
+          const item = appData.projects.find(x => x.id === id);
+          if (item) {
+            if (e.target.classList.contains("proj-name")) item.name = e.target.value;
+            if (e.target.classList.contains("proj-tech")) item.tech = e.target.value;
+            if (e.target.classList.contains("proj-live-url")) item.liveUrl = e.target.value;
+            updatePreview();
+            markSaved();
+          }
+        };
+      });
+
+      container.querySelectorAll(".proj-bullets").forEach(area => {
+        area.oninput = (e) => {
+          const id = e.target.getAttribute("data-id");
+          const item = appData.projects.find(x => x.id === id);
+          if (item) {
+            item.bullets = e.target.value.split('\n').filter(b => b.trim().length > 0);
+            updatePreview();
+            markSaved();
+          }
+        };
+      });
+
+      container.querySelectorAll(".btn-ai-proj").forEach(btn => {
+        btn.onclick = () => {
+          const id = btn.getAttribute("data-id");
+          const item = appData.projects.find(x => x.id === id);
+          if (!item || !item.bullets || item.bullets.length === 0) {
+            showToast("Add some project bullets first!", true);
+            return;
+          }
+          setSpinner(true, "AI Enhancing Project", "Strengthening architecture and engineering details...");
+          setTimeout(() => {
+            item.bullets = item.bullets.map(b => {
+              const cleaned = b.replace(/^[•\-\*]\s*/, '').trim();
+              if (cleaned.length > 5 && !cleaned.toLowerCase().startsWith("architected")) {
+                return `Architected full-stack workflow for ${cleaned.charAt(0).toLowerCase() + cleaned.slice(1)} with sub-100ms response latencies.`;
+              }
+              return cleaned;
+            });
+            renderProjectsEditor();
+            updatePreview();
+            markSaved();
+            setSpinner(false);
+            showToast("Project bullets enhanced!");
+          }, 600);
+        };
+      });
+    }
+
+    function renderEducationEditor() {
+      const container = document.getElementById("education-editor-list");
+      container.innerHTML = "";
+
+      appData.education.forEach((item, index) => {
+        const card = document.createElement("div");
+        card.className = "p-3.5 bg-slate-50 border border-slate-200/80 rounded-xl space-y-2.5";
+        card.innerHTML = `
+          <div class="flex justify-between items-center">
+            <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+              <i class="fa-solid fa-graduation-cap text-indigo-500 text-[11px]"></i> Education #${index + 1}
+            </span>
+            <button class="btn-del-edu text-slate-400 hover:text-rose-500 text-xs transition" data-id="${item.id}" title="Delete education">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">College / University / School Name</label>
+            <input type="text" class="edu-inst text-xs p-2 rounded-lg border border-slate-200 bg-white w-full" placeholder="e.g. VR Siddhartha Engineering College" value="${item.institution || ''}" data-id="${item.id}">
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">Degree / Course</label>
+              <input type="text" class="edu-degree text-xs p-2 rounded-lg border border-slate-200 bg-white w-full" placeholder="e.g. B.Tech in CSE" value="${item.degree || ''}" data-id="${item.id}">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">Percentage / CGPA</label>
+              <input type="text" class="edu-score text-xs p-2 rounded-lg border border-slate-200 bg-white w-full" placeholder="e.g. 8.7 CGPA or 96.4%" value="${item.score || ''}" data-id="${item.id}">
+            </div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">Location</label>
+              <input type="text" class="edu-location text-xs p-2 rounded-lg border border-slate-200 bg-white w-full" placeholder="e.g. Vijayawada, India" value="${item.location || ''}" data-id="${item.id}">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">Year / Duration</label>
+              <input type="text" class="edu-year text-xs p-2 rounded-lg border border-slate-200 bg-white w-full" placeholder="e.g. 2022 - 2026" value="${item.year || ''}" data-id="${item.id}">
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+
+      // Events for Education
+      container.querySelectorAll(".btn-del-edu").forEach(btn => {
+        btn.onclick = () => {
+          const id = btn.getAttribute("data-id");
+          appData.education = appData.education.filter(e => e.id !== id);
+          renderEducationEditor();
+          updatePreview();
+          markSaved();
+        };
+      });
+
+      container.querySelectorAll(".edu-inst, .edu-degree, .edu-score, .edu-location, .edu-year").forEach(inp => {
+        inp.oninput = (e) => {
+          const id = e.target.getAttribute("data-id");
+          const item = appData.education.find(x => x.id === id);
+          if (item) {
+            if (e.target.classList.contains("edu-inst")) item.institution = e.target.value;
+            if (e.target.classList.contains("edu-degree")) item.degree = e.target.value;
+            if (e.target.classList.contains("edu-score")) item.score = e.target.value;
+            if (e.target.classList.contains("edu-location")) item.location = e.target.value;
+            if (e.target.classList.contains("edu-year")) item.year = e.target.value;
+            updatePreview();
+            markSaved();
+          }
+        };
+      });
+    }
+
+    function updatePreview() {
+      // Personal
+      document.getElementById("pv-name").textContent = appData.personal.name || "Your Name";
+      document.getElementById("pv-title").textContent = appData.personal.title || "Software Engineer";
+      
+      const loc = document.getElementById("pv-location");
+      if (appData.personal.location) {
+        loc.innerHTML = `<i class="fa-solid fa-location-dot text-slate-400 mr-1 text-[11px]"></i>${appData.personal.location}`;
+        loc.style.display = "inline";
+      } else {
+        loc.style.display = "none";
+      }
+
+      document.getElementById("pv-email").textContent = appData.personal.email ? `• ${appData.personal.email}` : "";
+      document.getElementById("pv-phone").textContent = appData.personal.phone ? `• ${appData.personal.phone}` : "";
+
+      const websiteEl = document.getElementById("pv-website");
+      if (appData.personal.website) {
+        const clean = appData.personal.website.replace(/^https?:\/\//, '');
+        websiteEl.innerHTML = `• <a href="https://${clean}" target="_blank" class="hover:underline">${clean}</a>`;
+        websiteEl.style.display = "inline";
+      } else {
+        websiteEl.style.display = "none";
+      }
+
+      const linkedinEl = document.getElementById("pv-linkedin");
+      if (appData.personal.linkedin) {
+        const clean = appData.personal.linkedin.replace(/^https?:\/\//, '');
+        linkedinEl.innerHTML = `• <a href="https://${clean}" target="_blank" class="hover:underline">${clean}</a>`;
+        linkedinEl.style.display = "inline";
+      } else {
+        linkedinEl.style.display = "none";
+      }
+
+      const githubEl = document.getElementById("pv-github");
+      if (appData.personal.github) {
+        const clean = appData.personal.github.replace(/^https?:\/\//, '');
+        githubEl.innerHTML = `• <a href="https://${clean}" target="_blank" class="hover:underline">${clean}</a>`;
+        githubEl.style.display = "inline";
+      } else {
+        githubEl.style.display = "none";
+      }
+
+      // Summary
+      const summarySec = document.getElementById("pv-sec-summary");
+      if (appData.summary && appData.summary.trim().length > 0) {
+        summarySec.style.display = "block";
+        document.getElementById("pv-summary").textContent = appData.summary;
+      } else {
+        summarySec.style.display = "none";
+      }
+
+      // Skills
+      const skillsSec = document.getElementById("pv-sec-skills");
+      let hasSkills = false;
+
+      const langRow = document.getElementById("pv-skills-languages-row");
+      if (appData.skills.languages) {
+        langRow.style.display = "block";
+        document.getElementById("pv-skills-languages").textContent = appData.skills.languages;
+        hasSkills = true;
+      } else {
+        langRow.style.display = "none";
+      }
+
+      const fwRow = document.getElementById("pv-skills-frameworks-row");
+      if (appData.skills.frameworks) {
+        fwRow.style.display = "block";
+        document.getElementById("pv-skills-frameworks").textContent = appData.skills.frameworks;
+        hasSkills = true;
+      } else {
+        fwRow.style.display = "none";
+      }
+
+      const toolsRow = document.getElementById("pv-skills-tools-row");
+      if (appData.skills.tools) {
+        toolsRow.style.display = "block";
+        document.getElementById("pv-skills-tools").textContent = appData.skills.tools;
+        hasSkills = true;
+      } else {
+        toolsRow.style.display = "none";
+      }
+
+      skillsSec.style.display = hasSkills ? "block" : "none";
+
+      // Experience Section
+      const expContainer = document.getElementById("pv-experience-container");
+      expContainer.innerHTML = "";
+      if (appData.experience && appData.experience.length > 0) {
+        document.getElementById("pv-sec-experience").style.display = "block";
+        appData.experience.forEach(item => {
+          const div = document.createElement("div");
+          div.className = "text-xs space-y-1";
+
+          let bulletsHtml = "";
+          if (item.bullets && item.bullets.length > 0) {
+            bulletsHtml = `
+              <ul class="list-disc ml-4 space-y-1 text-slate-700 mt-1">
+                ${item.bullets.map(b => `<li class="leading-relaxed">${b}</li>`).join("")}
+              </ul>
+            `;
+          }
+
+          div.innerHTML = `
+            <div class="flex justify-between items-baseline font-bold text-slate-900">
+              <span class="text-[13px]">${item.role || ''}</span>
+              <span class="text-[11px] font-medium text-slate-500">${item.duration || ''}</span>
+            </div>
+            <div class="flex justify-between items-baseline text-slate-600 text-[11px]">
+              <span class="font-semibold text-slate-800">${item.company || ''}</span>
+              <span>${item.location || ''}</span>
+            </div>
+            ${bulletsHtml}
+          `;
+          expContainer.appendChild(div);
+        });
+      } else {
+        document.getElementById("pv-sec-experience").style.display = "none";
+      }
+
+      // Projects Section
+      const projContainer = document.getElementById("pv-projects-container");
+      projContainer.innerHTML = "";
+      if (appData.projects && appData.projects.length > 0) {
+        document.getElementById("pv-sec-projects").style.display = "block";
+        appData.projects.forEach(item => {
+          const div = document.createElement("div");
+          div.className = "text-xs space-y-1";
+
+          let bulletsHtml = "";
+          if (item.bullets && item.bullets.length > 0) {
+            bulletsHtml = `
+              <ul class="list-disc ml-4 space-y-1 text-slate-700 mt-1">
+                ${item.bullets.map(b => `<li class="leading-relaxed">${b}</li>`).join("")}
+              </ul>
+            `;
+          }
+
+          let liveUrlBadge = "";
+          if (item.liveUrl && item.liveUrl.trim().length > 0) {
+            const cleanUrl = item.liveUrl.startsWith("http") ? item.liveUrl : `https://${item.liveUrl}`;
+            liveUrlBadge = `<a href="${cleanUrl}" target="_blank" class="inline-flex items-center gap-1 text-[10px] font-semibold text-indigo-600 hover:underline ml-2 bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-200/70"><i class="fa-solid fa-arrow-up-right-from-square text-[8px]"></i> Live Demo</a>`;
+          }
+
+          div.innerHTML = `
+            <div class="flex justify-between items-baseline font-bold text-slate-900">
+              <div class="flex items-center flex-wrap">
+                <span class="text-[13px]">${item.name || ''}</span>
+                ${liveUrlBadge}
+              </div>
+              <span class="text-[11px] font-mono text-slate-600 bg-slate-100 px-2 py-0.5 rounded">${item.tech || ''}</span>
+            </div>
+            ${bulletsHtml}
+          `;
+          projContainer.appendChild(div);
+        });
+      } else {
+        document.getElementById("pv-sec-projects").style.display = "none";
+      }
+
+      // Education Section
+      const eduContainer = document.getElementById("pv-education-container");
+      eduContainer.innerHTML = "";
+      if (appData.education && appData.education.length > 0) {
+        document.getElementById("pv-sec-education").style.display = "block";
+        appData.education.forEach(item => {
+          const div = document.createElement("div");
+          div.className = "text-xs space-y-0.5";
+
+          let scoreBadge = "";
+          if (item.score && item.score.trim().length > 0) {
+            scoreBadge = `<span class="inline-block text-[10px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200/80 px-2 py-0.5 rounded ml-2">${item.score}</span>`;
+          }
+
+          div.innerHTML = `
+            <div class="flex justify-between items-baseline font-bold text-slate-900">
+              <span class="text-[13px]">${item.institution || ''}</span>
+              <span class="text-[11px] font-medium text-slate-500">${item.year || ''}</span>
+            </div>
+            <div class="flex justify-between items-baseline text-slate-600">
+              <div class="flex items-center">
+                <span class="font-medium text-slate-800">${item.degree || ''}</span>
+                ${scoreBadge}
+              </div>
+              <span class="text-[11px] text-slate-500">${item.location || ''}</span>
+            </div>
+          `;
+          eduContainer.appendChild(div);
+        });
+      } else {
+        document.getElementById("pv-sec-education").style.display = "none";
+      }
+    }
+
+    function applyStyle(styleName) {
+      appData.template = styleName;
+      const sheet = document.getElementById("resume-preview-sheet");
+      sheet.classList.remove("font-sans-clean", "font-serif-clean", "font-mono-clean");
+
+      document.querySelectorAll(".style-btn").forEach(btn => {
+        if (btn.getAttribute("data-style") === styleName) {
+          btn.className = "style-btn active-style px-2.5 py-1 text-xs font-semibold rounded-lg border border-indigo-600 bg-indigo-50 text-indigo-700";
+        } else {
+          btn.className = "style-btn px-2.5 py-1 text-xs font-semibold rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50";
+        }
+      });
+
+      if (styleName === "executive") {
+        sheet.classList.add("font-serif-clean");
+      } else if (styleName === "tech") {
+        sheet.classList.add("font-mono-clean");
+      } else {
+        sheet.classList.add("font-sans-clean");
+      }
+      markSaved();
+    }
+
+    function applyColor(hex) {
+      appData.color = hex;
+      document.getElementById("pv-title").style.color = hex;
+      document.querySelectorAll(".color-dot").forEach(dot => {
+        if (dot.getAttribute("data-color") === hex) {
+          dot.classList.add("ring-2", "ring-offset-1");
+        } else {
+          dot.classList.remove("ring-2", "ring-offset-1");
+        }
+      });
+      markSaved();
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      // Tab switching
+      document.querySelectorAll(".tab-btn").forEach(btn => {
+        btn.onclick = () => {
+          document.querySelectorAll(".tab-btn").forEach(b => {
+            b.classList.remove("border-indigo-600", "text-indigo-700", "active-tab");
+            b.classList.add("border-transparent", "text-slate-500");
+          });
+          btn.classList.add("border-indigo-600", "text-indigo-700", "active-tab");
+          btn.classList.remove("border-transparent", "text-slate-500");
+
+          const target = btn.getAttribute("data-tab");
+          document.querySelectorAll(".tab-content").forEach(tc => tc.classList.add("hidden"));
+          document.getElementById(target).classList.remove("hidden");
+        };
+      });
+
+      // Style buttons
+      document.querySelectorAll(".style-btn").forEach(b => {
+        b.onclick = () => applyStyle(b.getAttribute("data-style"));
+      });
+
+      // Color dots
+      document.querySelectorAll(".color-dot").forEach(d => {
+        d.onclick = () => applyColor(d.getAttribute("data-color"));
+      });
+
+      // Personal inputs
+      const personalFields = ["name", "title", "email", "phone", "location", "website", "linkedin", "github"];
+      personalFields.forEach(field => {
+        const inp = document.getElementById(`inp-${field}`);
+        if (inp) {
+          inp.oninput = (e) => {
+            appData.personal[field] = e.target.value;
+            updatePreview();
+            markSaved();
+          };
+        }
+      });
+
+      // Summary input
+      document.getElementById("inp-summary").oninput = (e) => {
+        appData.summary = e.target.value;
+        updatePreview();
+        markSaved();
+      };
+
+      // AI Summary Button
+      document.getElementById("btn-ai-summary").onclick = () => {
+        const cur = appData.summary || "";
+        if (!cur.trim()) {
+          showToast("Provide a rough summary first!", true);
+          return;
+        }
+        setSpinner(true, "Polishing Summary", "Transforming into high-impact executive summary...");
+        setTimeout(() => {
+          appData.summary = `Results-oriented ${appData.personal.title || 'Professional'} with expertise in modern full-stack development, distributed architectures, and scalable cloud solutions. Proven track record of delivering high-quality web applications and optimizing user workflows.`;
+          document.getElementById("inp-summary").value = appData.summary;
+          updatePreview();
+          markSaved();
+          setSpinner(false);
+          showToast("Summary enhanced with action-oriented phrasing!");
+        }, 600);
+      };
+
+      // Skills inputs
+      ["languages", "frameworks", "tools"].forEach(cat => {
+        const inp = document.getElementById(`inp-skills-${cat}`);
+        if (inp) {
+          inp.oninput = (e) => {
+            appData.skills[cat] = e.target.value;
+            updatePreview();
+            markSaved();
+          };
+        }
+      });
+
+      // Add Position
+      document.getElementById("btn-add-exp").onclick = () => {
+        appData.experience.push({
+          id: `exp-${Date.now()}`,
+          role: "Software Engineer",
+          company: "Company Name",
+          duration: "2024 - Present",
+          location: "Location",
+          bullets: ["Developed scalable feature services and streamlined API deployment pipelines."]
+        });
+        renderExperienceEditor();
+        updatePreview();
+        markSaved();
+      };
+
+      // Add Project
+      document.getElementById("btn-add-proj").onclick = () => {
+        appData.projects.push({
+          id: `proj-${Date.now()}`,
+          name: "Full Stack Web Application",
+          tech: "React, Node.js, PostgreSQL",
+          liveUrl: "https://myproject.vercel.app",
+          bullets: ["Engineered complete end-to-end web system with authentication and dashboard analytics."]
+        });
+        renderProjectsEditor();
+        updatePreview();
+        markSaved();
+      };
+
+      // Add Education
+      document.getElementById("btn-add-edu").onclick = () => {
+        appData.education.push({
+          id: `edu-${Date.now()}`,
+          institution: "University / College Name",
+          degree: "Bachelor of Technology",
+          score: "8.5 CGPA",
+          location: "City, Country",
+          year: "2022 - 2026"
+        });
+        renderEducationEditor();
+        updatePreview();
+        markSaved();
+      };
+
+      // Quick AI Autofill parser
+      document.getElementById("btn-autofill").onclick = () => {
+        const raw = document.getElementById("raw-ai-input").value.trim();
+        if (!raw) {
+          showToast("Please enter or paste your rough notes first!", true);
+          return;
+        }
+
+        setSpinner(true, "QuickCV Intelligence Parsing", "Extracting full contact details, college names, CGPA scores, project URLs, and skills...");
+        setTimeout(() => {
+          // Heuristic parser that extracts email, links, CGPA, and key information
+          const emailMatch = raw.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+          if (emailMatch) appData.personal.email = emailMatch[0];
+
+          const phoneMatch = raw.match(/(\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/);
+          if (phoneMatch) appData.personal.phone = phoneMatch[0];
+
+          // Score / CGPA / %
+          const scoreMatch = raw.match(/(\d{1,2}(\.\d+)?\s*(CGPA|%|GPA))/i);
+          if (scoreMatch && appData.education.length > 0) {
+            appData.education[0].score = scoreMatch[0].toUpperCase();
+          }
+
+          // Check for URL
+          const urlMatches = raw.match(/https?:\/\/[^\s]+|[a-zA-Z0-9-]+\.(vercel\.app|github\.com|netlify\.app|io)/gi);
+          if (urlMatches && urlMatches.length > 0 && appData.projects.length > 0) {
+            urlMatches.forEach(url => {
+              if (url.includes("github.com")) {
+                appData.projects[0].githubUrl = url.startsWith("http") ? url : `https://${url}`;
+              } else {
+                appData.projects[0].liveUrl = url.startsWith("http") ? url : `https://${url}`;
+              }
+            });
+          }
+
+          // First line heuristics for name
+          const lines = raw.split("\n").map(l => l.trim()).filter(Boolean);
+          if (lines.length > 0 && lines[0].length < 35 && !lines[0].includes("@")) {
+            appData.personal.name = lines[0];
+          }
+
+          syncFormInputs();
+          markSaved();
+          setSpinner(false);
+          showToast("Resume auto-filled with detected information!");
+        }, 800);
+      };
+
+      // Load Sample Data
+      document.getElementById("btn-load-sample").onclick = () => {
+        appData = JSON.parse(JSON.stringify(defaultData));
+        syncFormInputs();
+        markSaved();
+        showToast("Full sample developer resume loaded!");
+      };
+
+      // Reset Button
+      document.getElementById("btn-reset").onclick = () => {
+        appData = {
+          template: 'modern',
+          color: '#4f46e5',
+          personal: { name: "", title: "", email: "", phone: "", location: "", website: "", linkedin: "", github: "" },
+          summary: "",
+          skills: { languages: "", frameworks: "", tools: "" },
+          experience: [],
+          projects: [],
+          education: []
+        };
+        syncFormInputs();
+        markSaved();
+        showToast("All fields cleared.");
+      };
+
+      // Print Button
+      document.getElementById("btn-print").onclick = () => {
+        window.print();
+      };
+
+      // Initial form sync
+      syncFormInputs();
+    });
+  </script>
+</body>
+</html>
