@@ -160,6 +160,12 @@
           <button class="tab-btn px-3 py-2 border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-1.5 whitespace-nowrap" data-tab="tab-education">
             <i class="fa-solid fa-graduation-cap text-[11px]"></i> <span>Education</span>
           </button>
+          <button class="tab-btn px-3 py-2 border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-1.5 whitespace-nowrap" data-tab="tab-certifications">
+            <i class="fa-solid fa-certificate text-[11px]"></i> <span>Certifications</span>
+          </button>
+          <button class="tab-btn px-3 py-2 border-b-2 border-transparent text-slate-500 hover:text-slate-800 flex items-center gap-1.5 whitespace-nowrap" data-tab="tab-achievements">
+            <i class="fa-solid fa-trophy text-[11px]"></i> <span>Achievements</span>
+          </button>
         </div>
 
         <!-- Tab Panes Container -->
@@ -269,6 +275,34 @@
             <div id="education-editor-list" class="space-y-3.5"></div>
           </div>
 
+          <!-- TAB: Certifications -->
+          <div id="tab-certifications" class="tab-content hidden space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <span class="text-xs font-extrabold uppercase tracking-wider text-slate-400">Certifications</span>
+                <p class="text-[11px] text-slate-500">Credential name, issuer, issue date, and certificate link</p>
+              </div>
+              <button id="btn-add-cert" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 transition flex items-center gap-1 active:scale-95">
+                <i class="fa-solid fa-plus-circle"></i> Add Certification
+              </button>
+            </div>
+            <div id="certifications-editor-list" class="space-y-3.5"></div>
+          </div>
+
+          <!-- TAB: Achievements -->
+          <div id="tab-achievements" class="tab-content hidden space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <span class="text-xs font-extrabold uppercase tracking-wider text-slate-400">Honors & Achievements</span>
+                <p class="text-[11px] text-slate-500">Hackathons, coding contests, scholarships & academic recognitions</p>
+              </div>
+              <button id="btn-add-achieve" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 transition flex items-center gap-1 active:scale-95">
+                <i class="fa-solid fa-plus-circle"></i> Add Achievement
+              </button>
+            </div>
+            <div id="achievements-editor-list" class="space-y-3.5"></div>
+          </div>
+
         </div>
       </div>
     </section>
@@ -347,6 +381,18 @@
         <section id="pv-sec-education" class="mb-4">
           <h2 class="sec-heading text-xs font-extrabold uppercase tracking-widest text-slate-700 border-b border-slate-200 pb-1 mb-2">Education</h2>
           <div id="pv-education-container" class="space-y-2.5"></div>
+        </section>
+
+        <!-- Certifications Section -->
+        <section id="pv-sec-certifications" class="mb-4">
+          <h2 class="sec-heading text-xs font-extrabold uppercase tracking-widest text-slate-700 border-b border-slate-200 pb-1 mb-2">Certifications</h2>
+          <div id="pv-certifications-container" class="space-y-2"></div>
+        </section>
+
+        <!-- Achievements Section -->
+        <section id="pv-sec-achievements" class="mb-4">
+          <h2 class="sec-heading text-xs font-extrabold uppercase tracking-widest text-slate-700 border-b border-slate-200 pb-1 mb-2">Honors & Achievements</h2>
+          <div id="pv-achievements-container" class="space-y-2"></div>
         </section>
 
       </div>
@@ -449,6 +495,36 @@
           location: "Vijayawada, India",
           year: "2020"
         }
+      ],
+      certifications: [
+        {
+          id: "cert-1",
+          name: "AWS Certified Cloud Practitioner",
+          issuer: "Amazon Web Services (AWS)",
+          year: "2024",
+          url: "https://aws.amazon.com/verification"
+        },
+        {
+          id: "cert-2",
+          name: "Meta Front-End Developer Professional Certificate",
+          issuer: "Coursera / Meta",
+          year: "2023",
+          url: ""
+        }
+      ],
+      achievements: [
+        {
+          id: "ach-1",
+          title: "1st Prize - State Level Smart India Hackathon",
+          description: "Won first place out of 120+ teams for building an automated disaster relief response dispatch system.",
+          year: "2024"
+        },
+        {
+          id: "ach-2",
+          title: "Top 5% Global Rank in LeetCode Weekly Contests",
+          description: "Solved 500+ data structures and algorithms questions with a peak rating of 1850+.",
+          year: "2023 - 2024"
+        }
       ]
     };
 
@@ -457,6 +533,8 @@
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       appData = stored ? JSON.parse(stored) : JSON.parse(JSON.stringify(defaultData));
+      if (!appData.certifications) appData.certifications = JSON.parse(JSON.stringify(defaultData.certifications));
+      if (!appData.achievements) appData.achievements = JSON.parse(JSON.stringify(defaultData.achievements));
     } catch (e) {
       appData = JSON.parse(JSON.stringify(defaultData));
     }
@@ -521,6 +599,8 @@
       renderExperienceEditor();
       renderProjectsEditor();
       renderEducationEditor();
+      renderCertificationsEditor();
+      renderAchievementsEditor();
 
       // Apply Style & Accent
       applyStyle(appData.template || "modern");
@@ -821,6 +901,131 @@
       });
     }
 
+    function renderCertificationsEditor() {
+      const container = document.getElementById("certifications-editor-list");
+      container.innerHTML = "";
+
+      (appData.certifications || []).forEach((item, index) => {
+        const card = document.createElement("div");
+        card.className = "p-3.5 bg-slate-50 border border-slate-200/80 rounded-xl space-y-2.5";
+        card.innerHTML = `
+          <div class="flex justify-between items-center">
+            <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+              <i class="fa-solid fa-certificate text-indigo-500 text-[11px]"></i> Certification #${index + 1}
+            </span>
+            <button class="btn-del-cert text-slate-400 hover:text-rose-500 text-xs transition" data-id="${item.id}" title="Delete certification">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">Certificate / Course Title</label>
+              <input type="text" class="cert-name text-xs p-2 rounded-lg border border-slate-200 bg-white w-full" placeholder="e.g. AWS Certified Cloud Practitioner" value="${item.name || ''}" data-id="${item.id}">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">Issuing Organization</label>
+              <input type="text" class="cert-issuer text-xs p-2 rounded-lg border border-slate-200 bg-white w-full" placeholder="e.g. Amazon Web Services" value="${item.issuer || ''}" data-id="${item.id}">
+            </div>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">Year / Date</label>
+              <input type="text" class="cert-year text-xs p-2 rounded-lg border border-slate-200 bg-white w-full" placeholder="e.g. 2024" value="${item.year || ''}" data-id="${item.id}">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">Credential / Verification URL (Optional)</label>
+              <input type="text" class="cert-url text-xs p-2 rounded-lg border border-slate-200 bg-white w-full" placeholder="e.g. https://aws.amazon.com/verify/..." value="${item.url || ''}" data-id="${item.id}">
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+
+      container.querySelectorAll(".btn-del-cert").forEach(btn => {
+        btn.onclick = () => {
+          const id = btn.getAttribute("data-id");
+          appData.certifications = appData.certifications.filter(c => c.id !== id);
+          renderCertificationsEditor();
+          updatePreview();
+          markSaved();
+        };
+      });
+
+      container.querySelectorAll(".cert-name, .cert-issuer, .cert-year, .cert-url").forEach(inp => {
+        inp.oninput = (e) => {
+          const id = e.target.getAttribute("data-id");
+          const item = appData.certifications.find(x => x.id === id);
+          if (item) {
+            if (e.target.classList.contains("cert-name")) item.name = e.target.value;
+            if (e.target.classList.contains("cert-issuer")) item.issuer = e.target.value;
+            if (e.target.classList.contains("cert-year")) item.year = e.target.value;
+            if (e.target.classList.contains("cert-url")) item.url = e.target.value;
+            updatePreview();
+            markSaved();
+          }
+        };
+      });
+    }
+
+    function renderAchievementsEditor() {
+      const container = document.getElementById("achievements-editor-list");
+      container.innerHTML = "";
+
+      (appData.achievements || []).forEach((item, index) => {
+        const card = document.createElement("div");
+        card.className = "p-3.5 bg-slate-50 border border-slate-200/80 rounded-xl space-y-2.5";
+        card.innerHTML = `
+          <div class="flex justify-between items-center">
+            <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+              <i class="fa-solid fa-trophy text-amber-500 text-[11px]"></i> Achievement #${index + 1}
+            </span>
+            <button class="btn-del-achieve text-slate-400 hover:text-rose-500 text-xs transition" data-id="${item.id}" title="Delete achievement">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <div class="sm:col-span-2">
+              <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">Award / Recognition Title</label>
+              <input type="text" class="ach-title text-xs p-2 rounded-lg border border-slate-200 bg-white w-full" placeholder="e.g. 1st Place - Smart India Hackathon" value="${item.title || ''}" data-id="${item.id}">
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">Year / Period</label>
+              <input type="text" class="ach-year text-xs p-2 rounded-lg border border-slate-200 bg-white w-full" placeholder="e.g. 2024" value="${item.year || ''}" data-id="${item.id}">
+            </div>
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 mb-0.5">Description / Impact</label>
+            <textarea rows="2" class="ach-desc text-xs p-2 rounded-lg border border-slate-200 bg-white w-full leading-relaxed" placeholder="Brief details about the competition, your role, or rank..." data-id="${item.id}">${item.description || ''}</textarea>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+
+      container.querySelectorAll(".btn-del-achieve").forEach(btn => {
+        btn.onclick = () => {
+          const id = btn.getAttribute("data-id");
+          appData.achievements = appData.achievements.filter(a => a.id !== id);
+          renderAchievementsEditor();
+          updatePreview();
+          markSaved();
+        };
+      });
+
+      container.querySelectorAll(".ach-title, .ach-year, .ach-desc").forEach(inp => {
+        inp.oninput = (e) => {
+          const id = e.target.getAttribute("data-id");
+          const item = appData.achievements.find(x => x.id === id);
+          if (item) {
+            if (e.target.classList.contains("ach-title")) item.title = e.target.value;
+            if (e.target.classList.contains("ach-year")) item.year = e.target.value;
+            if (e.target.classList.contains("ach-desc")) item.description = e.target.value;
+            updatePreview();
+            markSaved();
+          }
+        };
+      });
+    }
+
     function updatePreview() {
       // Personal
       document.getElementById("pv-name").textContent = appData.personal.name || "Your Name";
@@ -1013,6 +1218,59 @@
       } else {
         document.getElementById("pv-sec-education").style.display = "none";
       }
+
+      // Certifications Section
+      const certContainer = document.getElementById("pv-certifications-container");
+      certContainer.innerHTML = "";
+      if (appData.certifications && appData.certifications.length > 0) {
+        document.getElementById("pv-sec-certifications").style.display = "block";
+        appData.certifications.forEach(item => {
+          const div = document.createElement("div");
+          div.className = "text-xs space-y-0.5";
+
+          let linkBadge = "";
+          if (item.url && item.url.trim().length > 0) {
+            const cleanUrl = item.url.startsWith("http") ? item.url : `https://${item.url}`;
+            linkBadge = `<a href="${cleanUrl}" target="_blank" class="inline-flex items-center gap-1 text-[10px] font-semibold text-indigo-600 hover:underline ml-2 bg-indigo-50 px-1.5 py-0.2 rounded border border-indigo-200/70"><i class="fa-solid fa-arrow-up-right-from-square text-[8px]"></i> Verify</a>`;
+          }
+
+          div.innerHTML = `
+            <div class="flex justify-between items-baseline font-bold text-slate-900">
+              <div class="flex items-center flex-wrap">
+                <span class="text-[12px] font-semibold">${item.name || ''}</span>
+                ${linkBadge}
+              </div>
+              <span class="text-[11px] font-medium text-slate-500">${item.year || ''}</span>
+            </div>
+            <div class="text-[11px] text-slate-600">${item.issuer || ''}</div>
+          `;
+          certContainer.appendChild(div);
+        });
+      } else {
+        document.getElementById("pv-sec-certifications").style.display = "none";
+      }
+
+      // Achievements Section
+      const achContainer = document.getElementById("pv-achievements-container");
+      achContainer.innerHTML = "";
+      if (appData.achievements && appData.achievements.length > 0) {
+        document.getElementById("pv-sec-achievements").style.display = "block";
+        appData.achievements.forEach(item => {
+          const div = document.createElement("div");
+          div.className = "text-xs space-y-0.5";
+
+          div.innerHTML = `
+            <div class="flex justify-between items-baseline font-bold text-slate-900">
+              <span class="text-[12px] font-semibold text-slate-900">${item.title || ''}</span>
+              <span class="text-[11px] font-medium text-slate-500">${item.year || ''}</span>
+            </div>
+            ${item.description ? `<p class="text-[11px] text-slate-600 leading-relaxed">${item.description}</p>` : ''}
+          `;
+          achContainer.appendChild(div);
+        });
+      } else {
+        document.getElementById("pv-sec-achievements").style.display = "none";
+      }
     }
 
     function applyStyle(styleName) {
@@ -1172,6 +1430,35 @@
         markSaved();
       };
 
+      // Add Certification
+      document.getElementById("btn-add-cert").onclick = () => {
+        if (!appData.certifications) appData.certifications = [];
+        appData.certifications.push({
+          id: `cert-${Date.now()}`,
+          name: "Certificate Name",
+          issuer: "Issuing Organization",
+          year: "2024",
+          url: ""
+        });
+        renderCertificationsEditor();
+        updatePreview();
+        markSaved();
+      };
+
+      // Add Achievement
+      document.getElementById("btn-add-achieve").onclick = () => {
+        if (!appData.achievements) appData.achievements = [];
+        appData.achievements.push({
+          id: `ach-${Date.now()}`,
+          title: "Honor or Award Title",
+          description: "Details regarding the recognition, rank, or competition.",
+          year: "2024"
+        });
+        renderAchievementsEditor();
+        updatePreview();
+        markSaved();
+      };
+
       // Quick AI Autofill parser
       document.getElementById("btn-autofill").onclick = () => {
         const raw = document.getElementById("raw-ai-input").value.trim();
@@ -1238,7 +1525,9 @@
           skills: { languages: "", frameworks: "", tools: "" },
           experience: [],
           projects: [],
-          education: []
+          education: [],
+          certifications: [],
+          achievements: []
         };
         syncFormInputs();
         markSaved();
